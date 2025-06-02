@@ -1,39 +1,49 @@
+import 'dart:convert'; //impotar a biblioteca "dart:covert" para utilizarmos o jsonDecode
 import 'package:flutter/material.dart';
+import 'package:flutter_gridviewbuilder/models/userDados.dart'; // importamos nosso dados desse model (UserDados)
 import 'package:http/http.dart' as http;
 
-class GridViewBuilder extends StatefulWidget {
-  const GridViewBuilder({super.key});
+class AulaListView extends StatefulWidget {
+  const AulaListView({super.key});
 
   @override
-  State<GridViewBuilder> createState() => _GridViewBuilderState();
+  State<AulaListView> createState() => _AulaListViewState();
 }
 
-class _GridViewBuilderState extends State<GridViewBuilder> {
-  //função para me trazer os dados dos usuarios
-  Future<void> getDadosUsers() async {
-    //a variavel response ira guardar esse resultado recebido
+class _AulaListViewState extends State<AulaListView> {
+  //função (getUserDados)
+  Future<List<UserDados>> getUserDados() async {
     final response = await http.get(
       Uri.parse('https://jsonplaceholder.typicode.com/users'),
     );
-    print(response.body);
-  } //////1522
 
-  //  final List<String> produtos = ["Camiseta", "Calça", "Boné", "Meias"];
-  final List<String> produtos = [
-    "Roteador rx15",
-    "Roteador L23",
-    "Roteador Plus",
-    "Roteador tenda",
-  ];
-  final List<String> marca = ["V-SOL", "INTEL BRAZ", "HAWAI", "MULTILASER"];
+    if (response.statusCode == 200) {
+      //guardamos aqui a converção de JSON para objetos na variavel "json"
+      final json = jsonDecode(response.body);
+      return List<UserDados>.from(
+        //retorno uma lista com o osbjetos do tipo UserDados realizando
+        //o map de cada elemento do objeto JSON
+        //transformando um a um em objetos UserDados
+        json.map((elemento) {
+          return UserDados.fromJson(elemento);
+        }),
+      );
+    } else {
+      return Future.error("Alerta: Um erro aconteceu");
+    }
+  } //final da função
 
-  final List<String> estado = ["NOVO", "USADO", "NOVO", "DANIFICADO"];
+  
+ 
+  
+
+  Future<List<UserDados>>? futureUsers;
 
   @override
   void initState() {
+    futureUsers = getUserDados();
     // TODO: implement initState
     super.initState();
-    getDadosUsers();
   }
 
   @override
@@ -72,7 +82,7 @@ class _GridViewBuilderState extends State<GridViewBuilder> {
                       border: Border.all(color: Colors.black),
                     ),
                     height: 50,
-                    child: Text("Marca"),
+                    child: Text("Nome de usuário"),
                   ),
                 ),
 
@@ -84,71 +94,91 @@ class _GridViewBuilderState extends State<GridViewBuilder> {
                       border: Border.all(color: Colors.black),
                     ),
                     height: 50,
-                    child: Text("Estado"),
+                    child: Text("@Email"),
                   ),
                 ),
               ],
             ),
           ),
-
           /////////////////////////////// FIM TITULO DAS COLUNAS ///////////////////////////////////////////////////////
-          Expanded(
-            // Uso o expanded para expandir os dado
-            child: ListView.builder(
-              //vou exibir a lista
-              scrollDirection: Axis.vertical, //mover tudo para verstical
-              itemCount: produtos.length, //vai contar os itens da lisa produto
-              itemBuilder: (context, index) {
-                return Container(
-                  // me retonar um container geral
-                  color: const Color(0x2D9E721B), // cor do container geral
-                  //chamo as outras colunas na tabela
-                  child: Flex(
-                    direction: Axis.horizontal,
-                    children: [
-                      Expanded(
-                        flex: 1,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black),
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Text(produtos[index]),
-                          ),
-                        ),
-                      ),
+          FutureBuilder(
+            future: futureUsers,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                final user = snapshot.data as List<UserDados>;
+                return Expanded(
+                  child: ListView.builder(
+                    //vou exibir a lista
+                    scrollDirection: Axis.vertical, // mover tudo para vertical
+                    itemCount: user.length,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        //chamo um container geral
+                        color: const Color(
+                          0x2D9E721B,
+                        ), // cor do container geral
+                        // chamo outras colunas
+                        child: Flex(
+                          direction: Axis.horizontal,
+                          children: [
 
-                      Expanded(
-                        flex: 1,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black),
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Text(marca[index]),
-                          ),
-                        ),
-                      ),
 
-                      Expanded(
-                        flex: 1,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black),
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Text(estado[index]),
-                          ),
+                            Expanded(
+                              flex: 1,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.black),
+                                ),
+                                child: Padding(
+                                  padding: EdgeInsets.all(10),
+                                  child: Text(
+                                    user[index].nome,
+                                    style: TextStyle(color: Colors.black),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            Expanded(
+                              flex: 1,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.black),
+                                ),
+                                child: Padding(
+                                  padding: EdgeInsets.all(10),
+                                  child: Text(
+                                    user[index].nomeUser,
+                                    style: TextStyle(color: Colors.black),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            Expanded(
+                              flex: 1,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.black),
+                                ),
+                                child: Padding(
+                                  padding: EdgeInsets.all(10),
+                                  child: Text(
+                                    user[index].email,
+                                    style: TextStyle(color: Colors.black),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
                 );
-              },
-            ),
+              }
+              return const Center(child: CircularProgressIndicator());
+            },
           ),
         ],
       ),
